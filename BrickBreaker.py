@@ -11,17 +11,11 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('Brick Breaker Game')
 
 # Colors
-#WHITE = (200, 200, 200)
-#BLACK = (50, 50, 50)
-#RED = (205, 50, 50)
-#GREEN = (50, 255, 50)
-#BLUE = (50, 50, 255)
-
-BROWN = (139, 69, 19) # Off-white
-NAVY_BLUE = (0, 0, 128)  # Navy blue
-MAROON = (128, 0, 0)  # Maroon red
-SILVER = (192, 192, 192)  # Silver
-BLACK = (50,50,50)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
 
 # Fonts
 font = pygame.font.SysFont('Arial', 32)
@@ -91,7 +85,7 @@ def start_menu():
     global difficulty
     while True:
         screen.fill(BLACK)
-        title_text = large_font.render("Brick Breaker", True, BROWN)
+        title_text = large_font.render("Brick Breaker", True, WHITE)
         screen.blit(title_text, (SCREEN_WIDTH // 2 - title_text.get_width() // 2, SCREEN_HEIGHT // 4))
 
         options = [
@@ -102,7 +96,7 @@ def start_menu():
             ("Press 3 for Hard", 200)
         ]
         for text, offset in options:
-            rendered_text = font.render(text, True, BROWN)
+            rendered_text = font.render(text, True, WHITE)
             screen.blit(rendered_text, (SCREEN_WIDTH // 2 - rendered_text.get_width() // 2, SCREEN_HEIGHT // 2 + offset))
 
         pygame.display.update()
@@ -179,7 +173,7 @@ def game_over():
 def pause_game():
     global paused
     paused = True  # Set the game to paused state
-    pause_text = large_font.render("Paused - Press P to Resume", True, BROWN)
+    pause_text = large_font.render("Paused - Press P to Resume", True, WHITE)
     while paused:
         screen.fill(BLACK)
         screen.blit(pause_text, (SCREEN_WIDTH // 2 - pause_text.get_width() // 2, SCREEN_HEIGHT // 3))
@@ -281,17 +275,17 @@ def game_loop():
         check_ball_brick_collision()
 
         # Draw paddle and ball
-        pygame.draw.rect(screen, NAVY_BLUE, (paddle_x, paddle_y, PADDLE_WIDTH, PADDLE_HEIGHT))
-        pygame.draw.circle(screen, MAROON, (ball_x, ball_y), BALL_RADIUS)
+        pygame.draw.rect(screen, BLUE, (paddle_x, paddle_y, PADDLE_WIDTH, PADDLE_HEIGHT))
+        pygame.draw.circle(screen, RED, (ball_x, ball_y), BALL_RADIUS)
 
         # Draw bricks
         for row in bricks:
             for brick in row:
-                pygame.draw.rect(screen, SILVER, brick)
+                pygame.draw.rect(screen, GREEN, brick)
 
         # Draw score and lives
-        score_text = font.render(f"Score: {score}", True, BROWN)
-        lives_text = font.render(f"Lives: {lives}", True, BROWN)
+        score_text = font.render(f"Score: {score}", True, WHITE)
+        lives_text = font.render(f"Lives: {lives}", True, WHITE)
         screen.blit(score_text, (10, 10))
         screen.blit(lives_text, (SCREEN_WIDTH - lives_text.get_width() - 10, 10))
 
