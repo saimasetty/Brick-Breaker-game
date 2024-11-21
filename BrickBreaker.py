@@ -130,11 +130,14 @@ def reset_game():
     paddle_y = SCREEN_HEIGHT - PADDLE_HEIGHT - 10
     ball_x = SCREEN_WIDTH // 2
     ball_y = SCREEN_HEIGHT // 2
+    ball_x_speed = 4
+    ball_y_speed = -4
     score = 0
     level = 1
     lives = 3
     bricks = create_bricks()
     set_difficulty(difficulty)
+
 
 # Ball-brick collision detection and destruction
 def check_ball_brick_collision():
@@ -191,7 +194,39 @@ def pause_menu():
                     pygame.quit()
                     quit()
 
-# Game loop
+
+# Game Over screen
+def game_over():
+    global score
+    while True:
+        screen.fill(DARK_BACKGROUND)
+        game_over_text = large_font.render("Game Over", True, WHITE)
+        final_score_text = font.render(f"Your Score: {score}", True, WHITE)
+        restart_text = font.render("Press R to Restart", True, WHITE)
+        quit_text = font.render("Press Q to Quit", True, WHITE)
+
+        # Display the text on the screen
+        screen.blit(game_over_text, (SCREEN_WIDTH // 2 - game_over_text.get_width() // 2, SCREEN_HEIGHT // 3))
+        screen.blit(final_score_text, (SCREEN_WIDTH // 2 - final_score_text.get_width() // 2, SCREEN_HEIGHT // 3 + 50))
+        screen.blit(restart_text, (SCREEN_WIDTH // 2 - restart_text.get_width() // 2, SCREEN_HEIGHT // 2))
+        screen.blit(quit_text, (SCREEN_WIDTH // 2 - quit_text.get_width() // 2, SCREEN_HEIGHT // 2 + 50))
+
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:  # Restart the game
+                    reset_game()
+                    game_loop()  # Start the game loop directly
+                    return
+                elif event.key == pygame.K_q:  # Quit the game
+                    pygame.quit()
+                    quit()
+
+
 # Game loop
 def game_loop():
     global paddle_x, paddle_y, ball_x, ball_y, ball_x_speed, ball_y_speed, lives, score, level, bricks, paused
