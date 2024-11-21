@@ -12,14 +12,14 @@ pygame.display.set_caption('Brick Breaker Game')
 
 # Colors
 WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
+LUXURIOUS_METALLIC_BLUE_GREEN = (87, 108, 67)  # Lusous metallic blue-green
+LIGHT_SKY_BLUE = (135, 206, 250)
+DARK_BACKGROUND = (48, 62, 79)  # #303E4F
+BRICK_COLOR = (244, 159, 28)  # #F49F1C
 
 # Fonts
-font = pygame.font.SysFont('Arial', 32)
-large_font = pygame.font.SysFont('Arial', 50)
+font = pygame.font.Font(pygame.font.match_font("bree serif"), 32)
+large_font = pygame.font.Font(pygame.font.match_font("bree serif"), 50)
 
 # Paddle, ball, and brick settings
 PADDLE_WIDTH = 100
@@ -34,13 +34,17 @@ ball_y_speed = -4
 score = 0
 level = 1
 lives = 3
-paused = False  # Pause state (global variable)
+paused = False  # Pause state
 
 # Initialize positions
 paddle_x = (SCREEN_WIDTH - PADDLE_WIDTH) // 2
 paddle_y = SCREEN_HEIGHT - PADDLE_HEIGHT - 10
 ball_x = SCREEN_WIDTH // 2
 ball_y = SCREEN_HEIGHT // 2
+
+# Load background image
+home_background_image = pygame.image.load(r"C:\Users\sai_kumar\Downloads\pythonprojectimage.png")
+home_background_image = pygame.transform.scale(home_background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # Brick grid
 def create_bricks():
@@ -74,29 +78,24 @@ def set_difficulty(level):
         PADDLE_WIDTH = 80  # Smaller paddle for hard difficulty
         PADDLE_HEIGHT = 15
 
-# Draw gradient background
-def draw_gradient_background():
-    for y in range(SCREEN_HEIGHT):
-        color_value = int(255 * (y / SCREEN_HEIGHT))
-        pygame.draw.line(screen, (color_value, 100, 255 - color_value), (0, y), (SCREEN_WIDTH, y))
-
 # Start menu
 def start_menu():
     global difficulty
     while True:
-        screen.fill(BLACK)
-        title_text = large_font.render("Brick Breaker", True, WHITE)
+        screen.blit(home_background_image, (0, 0))  # Set the home page background
+        title_text = large_font.render("Brick Breaker", True, LUXURIOUS_METALLIC_BLUE_GREEN)
         screen.blit(title_text, (SCREEN_WIDTH // 2 - title_text.get_width() // 2, SCREEN_HEIGHT // 4))
 
         options = [
             ("Press Space to Start", 0),
-            ("Press Q to Quit", 50),
+            ("Press P for Pause ", 50),
             ("Press 1 for Easy", 100),
             ("Press 2 for Medium", 150),
-            ("Press 3 for Hard", 200)
+            ("Press 3 for Hard", 200),
+            ("Press P for Pause during Gameplay", 300)
         ]
         for text, offset in options:
-            rendered_text = font.render(text, True, WHITE)
+            rendered_text = font.render(text, True, LUXURIOUS_METALLIC_BLUE_GREEN)
             screen.blit(rendered_text, (SCREEN_WIDTH // 2 - rendered_text.get_width() // 2, SCREEN_HEIGHT // 2 + offset))
 
         pygame.display.update()
@@ -137,20 +136,45 @@ def reset_game():
     bricks = create_bricks()
     set_difficulty(difficulty)
 
-# Game over screen
-def game_over():
+# Ball-brick collision detection and destruction
+def check_ball_brick_collision():
     global score
-    while True:
-        screen.fill(BLACK)
-        game_over_text = large_font.render(f"Game Over! Score: {score}", True, RED)
-        screen.blit(game_over_text, (SCREEN_WIDTH // 2 - game_over_text.get_width() // 2, SCREEN_HEIGHT // 3))
+    for row in bricks:
+        for brick in row:
+            ball_rect = pygame.Rect(ball_x - BALL_RADIUS, ball_y - BALL_RADIUS, 2 * BALL_RADIUS, 2 * BALL_RADIUS)
+            if brick.colliderect(ball_rect):
+                row.remove(brick)
+                global ball_y_speed
+                ball_y_speed = -ball_y_speed
+                score += 10
+                return
 
-        instructions = [
-            ("Press R to Restart", 0),
-            ("Press Q to Quit", 50),
-            ("Press P to Pause/Resume", 100)  # Added pause info here
+# Ball-paddle collision detection
+def check_ball_paddle_collision():
+    global ball_x_speed, ball_y_speed
+    ball_rect = pygame.Rect(ball_x - BALL_RADIUS, ball_y - BALL_RADIUS, 2 * BALL_RADIUS, 2 * BALL_RADIUS)
+    paddle_rect = pygame.Rect(paddle_x, paddle_y, PADDLE_WIDTH, PADDLE_HEIGHT)
+
+    if ball_rect.colliderect(paddle_rect):
+        ball_y_speed = -ball_y_speed
+        ball_center = ball_x
+        paddle_center = paddle_x + PADDLE_WIDTH // 2
+        distance_from_center = (ball_center - paddle_center) / (PADDLE_WIDTH // 2)
+        ball_x_speed += distance_from_center * 3
+
+#pause game
+def pause_menu():
+    global paused
+    while paused:
+        screen.fill(DARK_BACKGROUND)
+        pause_text = large_font.render("Game Paused", True, WHITE)
+        screen.blit(pause_text, (SCREEN_WIDTH // 2 - pause_text.get_width() // 2, SCREEN_HEIGHT // 3))
+
+        options = [
+            ("Press R to Resume", 50),
+            ("Press Q to Quit", 100)
         ]
-        for text, offset in instructions:
+        for text, offset in options:
             rendered_text = font.render(text, True, WHITE)
             screen.blit(rendered_text, (SCREEN_WIDTH // 2 - rendered_text.get_width() // 2, SCREEN_HEIGHT // 2 + offset))
 
@@ -161,97 +185,46 @@ def game_over():
                 pygame.quit()
                 quit()
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_r:  # Reset the game when 'R' is pressed
-                    reset_game()
-                    start_menu()  # Go back to the start menu after restarting
-                    return
-                elif event.key == pygame.K_q:
+                if event.key == pygame.K_r:  # Resume the game
+                    paused = False
+                elif event.key == pygame.K_q:  # Quit the game
                     pygame.quit()
                     quit()
 
-# Pause game
-def pause_game():
-    global paused
-    paused = True  # Set the game to paused state
-    pause_text = large_font.render("Paused - Press P to Resume", True, WHITE)
-    while paused:
-        screen.fill(BLACK)
-        screen.blit(pause_text, (SCREEN_WIDTH // 2 - pause_text.get_width() // 2, SCREEN_HEIGHT // 3))
-        pygame.display.update()
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_p:  # If "P" is pressed, resume the game
-                    paused = False  # Set paused to False, so the game loop resumes
-
-# Ball-brick collision detection and destruction
-def check_ball_brick_collision():
-    global score
-    for row in bricks:
-        for brick in row:
-            # Check if the ball's circle intersects with the brick (a rectangle)
-            ball_rect = pygame.Rect(ball_x - BALL_RADIUS, ball_y - BALL_RADIUS, 2 * BALL_RADIUS, 2 * BALL_RADIUS)
-            if brick.colliderect(ball_rect):
-                row.remove(brick)  # Remove the brick from the list
-                global ball_y_speed
-                ball_y_speed = -ball_y_speed  # Reverse the vertical speed (bounce effect)
-                score += 10  # Increase score when a brick is destroyed
-                return  # Stop checking once the ball hits a brick
-
-# Ball-paddle collision detection
-def check_ball_paddle_collision():
-    global ball_x_speed, ball_y_speed  # Explicitly declare global variables
-    ball_rect = pygame.Rect(ball_x - BALL_RADIUS, ball_y - BALL_RADIUS, 2 * BALL_RADIUS, 2 * BALL_RADIUS)
-    paddle_rect = pygame.Rect(paddle_x, paddle_y, PADDLE_WIDTH, PADDLE_HEIGHT)
-
-    if ball_rect.colliderect(paddle_rect):
-        # Ball hit the paddle, bounce it off
-        ball_y_speed = -ball_y_speed
-
-        # Optional: add some ball speed variation depending on where it hits the paddle
-        ball_center = ball_x
-        paddle_center = paddle_x + PADDLE_WIDTH // 2
-        distance_from_center = (ball_center - paddle_center) / (PADDLE_WIDTH // 2)  # normalized value [-1, 1]
-        ball_x_speed += distance_from_center * 3
-
+# Game loop
 # Game loop
 def game_loop():
-    global paddle_x, paddle_y, ball_x, ball_y, ball_x_speed, ball_y_speed, lives, score, level, bricks
+    global paddle_x, paddle_y, ball_x, ball_y, ball_x_speed, ball_y_speed, lives, score, level, bricks, paused
     while True:
-        screen.fill(BLACK)  # Clear the screen
-        draw_gradient_background()
+        if paused:
+            pause_menu()  # Corrected from pause_game() to pause_menu()
 
-        # Check if all bricks are cleared (next level)
-        if not any(bricks):  # No bricks left
+        screen.fill(DARK_BACKGROUND)  # Set the gameplay background color
+
+        if not any(bricks):
             level += 1
-            bricks = create_bricks()  # Create new set of bricks for the next level
-            set_difficulty(difficulty)  # Increase difficulty based on current level
+            bricks = create_bricks()
+            set_difficulty(difficulty)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_p:  # Toggle pause when "P" is pressed
-                    pause_game()
+                if event.key == pygame.K_p:  # Toggle pause
+                    paused = not paused
 
-        # Control the paddle with the arrow keys
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             paddle_x -= paddle_speed
         if keys[pygame.K_RIGHT]:
             paddle_x += paddle_speed
 
-        # Boundaries for the paddle to stay within screen
         if paddle_x < 0:
             paddle_x = 0
         if paddle_x + PADDLE_WIDTH > SCREEN_WIDTH:
             paddle_x = SCREEN_WIDTH - PADDLE_WIDTH
 
-        # Ball movement and boundary checks
         ball_x += ball_x_speed
         ball_y += ball_y_speed
 
@@ -259,12 +232,12 @@ def game_loop():
             ball_x_speed = -ball_x_speed
         if ball_y <= BALL_RADIUS:
             ball_y_speed = -ball_y_speed
-        elif ball_y >= SCREEN_HEIGHT - BALL_RADIUS:  # Ball falls off screen
+        elif ball_y >= SCREEN_HEIGHT - BALL_RADIUS:
             lives -= 1
             if lives == 0:
                 game_over()
                 reset_game()
-                start_menu()  # Go back to the start menu after game over
+                start_menu()
                 return
             else:
                 ball_x, ball_y = SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2
@@ -274,23 +247,22 @@ def game_loop():
         check_ball_paddle_collision()
         check_ball_brick_collision()
 
-        # Draw paddle and ball
-        pygame.draw.rect(screen, BLUE, (paddle_x, paddle_y, PADDLE_WIDTH, PADDLE_HEIGHT))
-        pygame.draw.circle(screen, RED, (ball_x, ball_y), BALL_RADIUS)
+        pygame.draw.rect(screen, LIGHT_SKY_BLUE, (paddle_x, paddle_y, PADDLE_WIDTH, PADDLE_HEIGHT))
+        pygame.draw.circle(screen, LIGHT_SKY_BLUE, (ball_x, ball_y), BALL_RADIUS)
 
-        # Draw bricks
         for row in bricks:
             for brick in row:
-                pygame.draw.rect(screen, GREEN, brick)
+                pygame.draw.rect(screen, BRICK_COLOR, brick)
 
-        # Draw score and lives
         score_text = font.render(f"Score: {score}", True, WHITE)
         lives_text = font.render(f"Lives: {lives}", True, WHITE)
         screen.blit(score_text, (10, 10))
         screen.blit(lives_text, (SCREEN_WIDTH - lives_text.get_width() - 10, 10))
 
         pygame.display.update()
-        pygame.time.Clock().tick(60)  # Maintain 60 FPS
+        pygame.time.Clock().tick(60)
+
+    
 
 # Start the game
 start_menu()
